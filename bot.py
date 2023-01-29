@@ -2,8 +2,14 @@ from aiogram import executor
 
 from create_bot import dp
 
+import sqllite
+
+
 async def on_startup(_):
+    await sqllite.db_connect()
+    print("Data base connected successfully!")
     print("The bot has been started successfully!")
+
 
 from handlers import client, admin, others
 
