@@ -1,17 +1,41 @@
 from aiogram import types, Dispatcher
 
-from keyboards import get_start_kb
+from create_bot import bot
 
+import sqllite
+
+from keyboards.client_kb import *
+
+async def show_all_products_client(message: types.Message, products: list) -> None:
+    for product in products:
+        await bot.send_photo(chat_id=message.chat.id,
+                             photo=product[1],
+                             caption=f"Product_id: {product[0]}\n"
+                                     f"Title: <b>{product[2]}</b>\n"
+                                     f"Description: <em>{product[3]}</em>\n"
+                                     f"Price: <em>{product[4]} RUB</em>",
+                             parse_mode='html',
+                             reply_markup=get_buy_ikb(product[0])
+                             )
 async def start_command_client(message: types.Message) -> None:
     await message.answer(f'Привет, {message.from_user.first_name}!',
                          reply_markup=get_start_kb())
     await message.delete()
 
-async def product_command(message: types.Message) -> None:
-    await message.answer(f'Продукты:')
-    await message.delete()
+async def product_command_client(message: types.Message) -> None:
+    products = await sqllite.get_all_products_bd()
 
+    if not products:
+        await message.answer("Пока нет продуктов!")
+        await message.delete()
+
+    await show_all_products_client(message, products)
+
+async def cb_buy_product(callback: types.CallbackQuery) -> None:
+    await callback.message.reply("Куплено!")
+    await callback.answer()
 
 def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(start_command_client, commands=['start'])
-    dp.register_message_handler(product_command, commands=['Продукты'])
+    dp.register_message_handler(product_command_client, commands=['Продукты'])
+    dp.register_callback_query_handler(cb_buy_product, client_cb.filter(action="buy"))

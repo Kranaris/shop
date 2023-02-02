@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.callback_data import CallbackData
-from aiogram.dispatcher.filters.state import StatesGroup, State
+
 
 products_cb = CallbackData('product', 'id', 'action')
 
