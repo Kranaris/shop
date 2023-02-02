@@ -9,7 +9,7 @@ async def db_connect() -> None:
     cur = db.cursor()
 
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS products(product_id INTEGER PRIMARY KEY, photo TEXT, title TEXT, description TEXT)")
+        "CREATE TABLE IF NOT EXISTS products(product_id INTEGER PRIMARY KEY, photo TEXT, title TEXT, description TEXT, price INTEGER)")
 
     db.commit()
 
@@ -21,10 +21,11 @@ async def get_all_products_bd() -> list:
 
 async def create_new_product(state) -> sqlite3.Cursor:
     async with state.proxy() as data:
-        new_product = cur.execute("INSERT INTO products (photo, title, description) VALUES (?, ?, ?)",
+        new_product = cur.execute("INSERT INTO products (photo, title, description, price) VALUES (?, ?, ?, ?)",
                                   (data['photo'],
                                    data['title'],
-                                   data['description']))
+                                   data['description'],
+                                   data['price']))
         db.commit()
     return new_product
 

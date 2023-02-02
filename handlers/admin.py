@@ -15,6 +15,7 @@ class Product_statesGroup(StatesGroup):
     photo = State()
     title = State()
     description = State()
+    price = State()
     edit_title = State()
 
 
@@ -25,10 +26,10 @@ async def show_all_products(message: types.Message, products: list) -> None:
                                  photo=product[1],
                                  caption=f"Product_id: {product[0]}\n"
                                          f"Title: <b>{product[2]}</b>\n"
-                                         f"Description: <em>{product[3]}</em>",
+                                         f"Description: <em>{product[3]}</em>\n"
+                                         f"Price: <em>{product[4]} RUB</em>",
                                  parse_mode='html',
                                  reply_markup=get_edit_ikb(product[0]))
-
 
 async def start_command_admin(message: types.Message) -> None:
     if message.from_user.id in ADMINS:
@@ -81,11 +82,19 @@ async def handle_title(message: types.Message, state: FSMContext) -> None:
         await message.reply("Напиши описание:")
         await Product_statesGroup.next()
 
+async def handle_price(message: types.Message, state: FSMContext) -> None:
+    if message.from_user.id in ADMINS:
+        async with state.proxy() as data:
+            data['description'] = message.text
+
+        await message.reply("Напиши цену:")
+        await Product_statesGroup.next()
+
 
 async def handle_finish(message: types.Message, state: FSMContext) -> None:
     if message.from_user.id in ADMINS:
         async with state.proxy() as data:
-            data['description'] = message.text
+            data['price'] = message.text
         await sqllite.create_new_product(state)
         await message.reply("Продукт добавлен!",
                             reply_markup=get_admin_kb())
@@ -101,6 +110,20 @@ async def cancel_command(message: types.Message, state: FSMContext) -> None:
 
         await state.finish()
 
+async def cb_delete_product(callback: types.CallbackQuery, callback_data: dict) -> None:
+    await sqllite.delete_product(callback_data['id'])
+
+    await callback.message.reply("Продукт был удален!")
+    await callback.answer()
+
+async def cb_edit_product(callback: types.CallbackQuery, callback_data: dict, state: FSMContext) -> None:
+    await  callback.message.answer("Напиши новое Название:",
+                                   reply_markup=get_cancel())
+    await Product_statesGroup.edit_title.set()
+    async with state.proxy() as data:
+        data['product_id'] = callback_data['id']
+
+    await callback.answer()
 
 async def get_all_products(message: types.Message) -> None:
     if message.from_user.id in ADMINS:
@@ -122,4 +145,7 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(check_photo, lambda message: not message.photo, state=Product_statesGroup.photo)
     dp.register_message_handler(load_photo, content_types=['photo'], state=Product_statesGroup.photo)
     dp.register_message_handler(handle_title, state=Product_statesGroup.title)
-    dp.register_message_handler(handle_finish, state=Product_statesGroup.description)
+    dp.register_message_handler(handle_price, state=Product_statesGroup.description)
+    dp.register_message_handler(handle_finish, state=Product_statesGroup.price)
+    dp.register_callback_query_handler(cb_delete_product, products_cb.filter(action="delete"))
+    dp.register_callback_query_handler(cb_edit_product, products_cb.filter(action="edit"))
