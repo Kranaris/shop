@@ -39,9 +39,10 @@ async def product_command_client(message: types.Message) -> None:
 
 
 async def cb_buy_product(callback: types.CallbackQuery) -> None:
+    product_data = callback.data.split(':')
     await bot.send_message(ADMINS[0], text=f"Новый Зааказ!\n"
                                            f"Клиент: @{callback.from_user.username}\n"
-                                           f"Продукт: {callback.data}"
+                                           f"Product_id: {product_data[1]}\n"
                            )
     await callback.message.reply("Заявка на покупку отправлена Администратору!\n"
                                  "Пожалуйста ожидайте ответ.")
