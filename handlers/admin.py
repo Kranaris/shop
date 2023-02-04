@@ -27,9 +27,9 @@ async def show_all_products(message: types.Message, products: list) -> None:
             await bot.send_photo(chat_id=message.chat.id,
                                  photo=product[1],
                                  caption=f"Product_id: {product[0]}\n"
-                                         f"Title: <b>{product[2]}</b>\n"
-                                         f"Description: <em>{product[3]}</em>\n"
-                                         f"Price: <em>{product[4]} RUB</em>",
+                                         f"Название: <b>{product[2]}</b>\n"
+                                         f"Описание: <em>{product[3]}</em>\n"
+                                         f"Цена: <em>{product[4]} RUB</em>",
                                  parse_mode='html',
                                  reply_markup=get_edit_ikb(product[0]))
 
