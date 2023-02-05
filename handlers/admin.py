@@ -122,14 +122,25 @@ async def cb_delete_product(callback: types.CallbackQuery, callback_data: dict) 
     await callback.answer()
 
 
-# async def cb_edit_product(callback: types.CallbackQuery, callback_data: dict) -> None:
-#     await bot.edit_message_caption(chat_id=callback.message.chat.id,
-#                                    message_id=callback.message.message_id,
-#                                    caption="Что изменить?",
-#                                    reply_markup=get_edit_ikb(callback_data['id'])
-#                                    )
-#
-#
+async def cb_edit_product(callback: types.CallbackQuery, callback_data: dict, state: FSMContext) -> None:
+    async with state.proxy() as data:
+        data['caption'] = callback.message.caption
+    await bot.edit_message_caption(chat_id=callback.message.chat.id,
+                                   message_id=callback.message.message_id,
+                                   caption="Что изменить?",
+                                   reply_markup=get_edit_ikb(callback_data['id'])
+                                   )
+
+
+async def cb_back(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    async with state.proxy() as data:
+        await bot.edit_message_caption(chat_id=callback.message.chat.id,
+                                       message_id=callback.message.message_id,
+                                       caption=data['caption'],
+                                       reply_markup=get_product_ikb(callback_data['id'])
+                                       )
+
+
 # async def load_new_title(message: types.Message, state: FSMContext) -> None:
 #     async with state.proxy() as data:
 #         await sqllite.edit_product(data['product_id'], message.text)
@@ -163,4 +174,5 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(cancel_command, commands=['отмена'], state="*")
     dp.register_callback_query_handler(cb_delete_product, products_cb.filter(action="delete"))
     dp.register_callback_query_handler(cb_edit_product, products_cb.filter(action="edit"))
-    dp.register_message_handler(load_new_title, state=Product_statesGroup.edit_title)
+    dp.register_callback_query_handler(cb_back, products_cb.filter(action="back"))
+    # dp.register_message_handler(load_new_title, state=Product_statesGroup.edit_title)
