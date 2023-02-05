@@ -19,10 +19,24 @@ def product_manager() -> ReplyKeyboardMarkup:
     return kb
 
 
+def get_product_ikb(product_id: int) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("Изменить", callback_data=products_cb.new(product_id, 'edit'))],
+        [InlineKeyboardButton("Удалить", callback_data=products_cb.new(product_id, 'delete'))],
+
+    ])
+
+    return ikb
+
+
 def get_edit_ikb(product_id: int) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("Изменить_продукт", callback_data=products_cb.new(product_id, 'edit'))],
-        [InlineKeyboardButton("Удалить_продукт", callback_data=products_cb.new(product_id, 'delete'))],
+        [InlineKeyboardButton("Изменить_фото", callback_data=products_cb.new(product_id, 'photo'))],
+        [InlineKeyboardButton("Изменить_название", callback_data=products_cb.new(product_id, 'title'))],
+        [InlineKeyboardButton("Изменить_описание", callback_data=products_cb.new(product_id, 'description'))],
+        [InlineKeyboardButton("Изменить_цену", callback_data=products_cb.new(product_id, 'price'))],
+        [InlineKeyboardButton("Назад", callback_data=products_cb.new(product_id, 'back'))],
+
     ])
 
     return ikb
