@@ -18,7 +18,7 @@ class Product_statesGroup(StatesGroup):
     title = State()
     description = State()
     price = State()
-    edit_title = State()
+    edit_some = State()
 
 
 async def show_all_products(message: types.Message, products: list) -> None:
@@ -141,13 +141,23 @@ async def cb_back(callback: types.CallbackQuery, callback_data: dict, state: FSM
                                        )
 
 
-# async def load_new_title(message: types.Message, state: FSMContext) -> None:
-#     async with state.proxy() as data:
-#         await sqllite.edit_product(data['product_id'], message.text)
-#
-#     await message.reply("Утановлено новое название!",
-#                         reply_markup=get_admin_kb())
-#     await state.finish()
+async def edit_some(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
+    await callback.message.answer("Нариши новое:",
+                                  reply_markup=get_cancel())
+    await Product_statesGroup.edit_some.set()
+    async with state.proxy() as data:
+        data['product_id'] = callback_data['id']
+        data['action'] = callback_data["action"]
+    await callback.answer()
+
+
+async def load_new_some(message: types.Message, state: FSMContext) -> None:
+    async with state.proxy() as data:
+        await sqllite.edit_some(data['product_id'], data['action'], message.text)
+
+    await message.reply("Изменено!",
+                        reply_markup=get_admin_kb())
+    await state.finish()
 
 
 async def get_all_products(message: types.Message) -> None:
@@ -175,4 +185,5 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_callback_query_handler(cb_delete_product, products_cb.filter(action="delete"))
     dp.register_callback_query_handler(cb_edit_product, products_cb.filter(action="edit"))
     dp.register_callback_query_handler(cb_back, products_cb.filter(action="back"))
-    # dp.register_message_handler(load_new_title, state=Product_statesGroup.edit_title)
+    dp.register_callback_query_handler(edit_some, products_cb.filter(action=["title", "description", "price"]))
+    dp.register_message_handler(load_new_some, state=Product_statesGroup.edit_some)
