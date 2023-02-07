@@ -18,6 +18,9 @@ async def get_all_products_bd() -> list:
     products = cur.execute("SELECT * FROM products").fetchall()
     return products
 
+async def get_one_product_bd(product_id) -> list:
+    product = cur.execute("SELECT * FROM products WHERE product_id = ?", (product_id)).fetchone()
+    return product
 
 async def create_new_product(state) -> sqlite3.Cursor:
     async with state.proxy() as data:

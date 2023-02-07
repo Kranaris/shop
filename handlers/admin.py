@@ -86,6 +86,11 @@ async def handle_title(message: types.Message, state: FSMContext) -> None:
         await Product_statesGroup.next()
 
 
+async def check_price(message: types.Message) -> None:
+    if message.from_user.id in ADMINS:
+        await message.reply("Напиши цену целым числом!")
+
+
 async def handle_price(message: types.Message, state: FSMContext) -> None:
     if message.from_user.id in ADMINS:
         async with state.proxy() as data:
@@ -153,11 +158,23 @@ async def edit_some(callback: types.CallbackQuery, callback_data: dict, state: F
 
 async def load_new_some(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
-        await sqllite.edit_some(data['product_id'], data['action'], message.text)
+        if data['action'] == 'price' and not message.text.isdigit():
+            await message.reply("Цена должна быть целым числом!")
+        else:
+            await sqllite.edit_some(data['product_id'], data['action'], message.text)
+            await message.reply("Изменено!",
+                                reply_markup=get_admin_kb())
+            product = await sqllite.get_one_product_bd(data['product_id'])
 
-    await message.reply("Изменено!",
-                        reply_markup=get_admin_kb())
-    await state.finish()
+            await bot.send_photo(chat_id=message.chat.id,
+                                 photo=product[1],
+                                 caption=f"Product_id: {product[0]}\n"
+                                         f"Название: <b>{product[2]}</b>\n"
+                                         f"Описание: <em>{product[3]}</em>\n"
+                                         f"Цена: <em>{product[4]} RUB</em>",
+                                 parse_mode='html',
+                                 reply_markup=get_product_ikb(product[0]))
+            await state.finish()
 
 
 async def get_all_products(message: types.Message) -> None:
@@ -179,6 +196,8 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(check_photo, lambda message: not message.photo, state=Product_statesGroup.photo)
     dp.register_message_handler(load_photo, content_types=['photo'], state=Product_statesGroup.photo)
     dp.register_message_handler(handle_title, state=Product_statesGroup.title)
+    dp.register_message_handler(check_price, lambda message: not message.text.isdigit(),
+                                state=Product_statesGroup.price)
     dp.register_message_handler(handle_price, state=Product_statesGroup.description)
     dp.register_message_handler(handle_finish, state=Product_statesGroup.price)
     dp.register_message_handler(cancel_command, commands=['отмена'], state="*")
