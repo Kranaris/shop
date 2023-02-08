@@ -41,3 +41,7 @@ async def delete_product(product_id: int) -> None:
 async def edit_some(product_id: int, column: str, text: str) -> None:
     cur.execute(f"UPDATE products SET {column} = ? WHERE product_id = ?", (text, product_id,))
     db.commit()
+
+async def edit_photo(product_id: int, photo_id: str) -> None:
+    cur.execute(f"UPDATE products SET photo = ? WHERE product_id = ?", (photo_id, product_id))
+    db.commit()
