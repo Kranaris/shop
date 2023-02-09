@@ -18,8 +18,9 @@ class Product_statesGroup(StatesGroup):
     title = State()
     description = State()
     price = State()
-    edit_some = State()
     edit_photo = State()
+    edit_some = State()
+
 
 
 async def show_all_products(message: types.Message, products: list) -> None:
@@ -41,8 +42,11 @@ async def start_command_admin(message: types.Message) -> None:
                              reply_markup=get_admin_kb())
         await message.delete()
     else:
-        await message.reply(f'Ты не Администратор')
-        await message.delete()
+        await bot.send_message(chat_id=ADMINS[0],
+                               text=f'Пользователь\n'
+                                    f'Username: @{message.from_user.username}\n'
+                                    f'id: {message.from_user.id}\n'
+                                    f'попытался воспользоваться правами администратора')
 
 
 async def product_command(message: types.Message) -> None:
@@ -110,14 +114,7 @@ async def handle_finish(message: types.Message, state: FSMContext) -> None:
                             reply_markup=get_admin_kb())
         await state.finish()
 
-async def cancel_command(message: types.Message, state: FSMContext) -> None:
-    if message.from_user.id in ADMINS:
-        if state is None:
-            return
-        await message.reply('Добавление отменено!',
-                            reply_markup=get_admin_kb())
 
-        await state.finish()
 async def cb_delete_product(callback: types.CallbackQuery, callback_data: dict) -> None:
     await sqllite.delete_product(callback_data['id'])
 
@@ -153,11 +150,21 @@ async def edit_some(callback: types.CallbackQuery, callback_data: dict, state: F
                                           reply_markup=get_cancel())
             await Product_statesGroup.edit_photo.set()
         else:
-            await callback.message.answer("Нариши новое:",
+            await callback.message.answer("Напиши новое:",
                                           reply_markup=get_cancel())
             await Product_statesGroup.edit_some.set()
             data['message'] = callback.message.message_id
     await callback.answer()
+
+
+async def cancel_command(message: types.Message, state: FSMContext) -> None:
+    if message.from_user.id in ADMINS:
+        if state is None:
+            return
+        await message.reply('Действие отменено!',
+                            reply_markup=get_admin_kb())
+
+        await state.finish()
 
 
 async def load_new_photo(message: types.Message, state: FSMContext) -> None:
@@ -196,9 +203,6 @@ async def load_new_some(message: types.Message, state: FSMContext) -> None:
             await state.finish()
 
 
-
-
-
 async def get_all_products(message: types.Message) -> None:
     if message.from_user.id in ADMINS:
         products = await sqllite.get_all_products_bd()
@@ -215,18 +219,17 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(product_command, commands=['управление'])
     dp.register_message_handler(get_all_products, commands=['показать_все_продукты'])
     dp.register_message_handler(add_new_product, commands=['добавить_новый_продукт'])
-    dp.register_message_handler(check_photo, lambda message: not message.photo, state=[Product_statesGroup.photo,
-                                                                                       Product_statesGroup.edit_photo])
+    dp.register_message_handler(check_photo, lambda message: not message.photo, state=[Product_statesGroup.photo])
     dp.register_message_handler(load_photo, content_types=['photo'], state=Product_statesGroup.photo)
     dp.register_message_handler(handle_title, state=Product_statesGroup.title)
     dp.register_message_handler(check_price, lambda message: not message.text.isdigit(),
                                 state=Product_statesGroup.price)
     dp.register_message_handler(handle_price, state=Product_statesGroup.description)
     dp.register_message_handler(handle_finish, state=Product_statesGroup.price)
-    dp.register_callback_query_handler(cb_delete_product, products_cb.filter(action="delete"))
-    dp.register_callback_query_handler(cb_edit_product, products_cb.filter(action="edit"))
-    dp.register_callback_query_handler(cb_back, products_cb.filter(action="back"))
-    dp.register_callback_query_handler(edit_some, products_cb.filter(action=["title", "description", "price", "photo"]))
-    dp.register_message_handler(load_new_photo, state=Product_statesGroup.edit_photo)
-    dp.register_message_handler(load_new_some, state=Product_statesGroup.edit_some)
     dp.register_message_handler(cancel_command, commands=['отмена'], state="*")
+    dp.register_callback_query_handler(cb_delete_product, products_cb.filter(action='delete'))
+    dp.register_callback_query_handler(cb_edit_product, products_cb.filter(action='edit'))
+    dp.register_callback_query_handler(cb_back, products_cb.filter(action='back'))
+    dp.register_callback_query_handler(edit_some, products_cb.filter(action=['title', 'description', 'price', 'photo']))
+    dp.register_message_handler(load_new_photo, content_types=['photo'], state=Product_statesGroup.edit_photo)
+    dp.register_message_handler(load_new_some, state=Product_statesGroup.edit_some)
