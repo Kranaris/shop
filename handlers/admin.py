@@ -4,16 +4,13 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 
 from aiogram.dispatcher.storage import FSMContext
 
-from create_bot import bot
+from create_bot import bot, ADMINS
 
 from keyboards.admin_kb import *
 
 import sqllite
 
-import os
 
-ADMINS = [int(_) for _ in os.getenv("ADMINS").split(",")]
-print(ADMINS)
 
 class Product_statesGroup(StatesGroup):
     photo = State()

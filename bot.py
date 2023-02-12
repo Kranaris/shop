@@ -11,7 +11,7 @@ async def on_startup(_):
     print("The bot has been started successfully!")
 
 
-from handlers import client, admin, others
+from handlers import client, admin
 
 client.register_handlers_client(dp)
 admin.register_handlers_admin(dp)

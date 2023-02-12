@@ -1,14 +1,10 @@
 from aiogram import types, Dispatcher
 
-from create_bot import bot
+from create_bot import bot, ADMINS
 
 import sqllite
 
 from keyboards.client_kb import *
-
-import os
-
-ADMINS = os.getenv("ADMINS")
 
 
 async def show_all_products_client(message: types.Message, products: list) -> None:
