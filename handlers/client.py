@@ -6,7 +6,9 @@ import sqllite
 
 from keyboards.client_kb import *
 
-from config import ADMINS
+import os
+
+ADMINS = os.getenv("ADMINS")
 
 
 async def show_all_products_client(message: types.Message, products: list) -> None:

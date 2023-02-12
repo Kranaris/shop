@@ -10,7 +10,12 @@ from keyboards.admin_kb import *
 
 import sqllite
 
-from config import ADMINS
+import os
+
+import dotenv
+
+dotenv.load_dotenv()
+ADMINS = os.getenv("ADMINS")
 
 
 class Product_statesGroup(StatesGroup):
