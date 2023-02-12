@@ -12,11 +12,8 @@ import sqllite
 
 import os
 
-import dotenv
-
-dotenv.load_dotenv()
-ADMINS = os.getenv("ADMINS")
-
+ADMINS = [int(_) for _ in os.getenv("ADMINS").split(",")]
+print(ADMINS)
 
 class Product_statesGroup(StatesGroup):
     photo = State()
