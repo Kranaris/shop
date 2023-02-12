@@ -11,7 +11,6 @@ from keyboards.admin_kb import *
 import sqllite
 
 
-
 class Product_statesGroup(StatesGroup):
     photo = State()
     title = State()
